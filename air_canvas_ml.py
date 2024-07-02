@@ -49,6 +49,10 @@ mpDraw = mp.solutions.drawing_utils
 # Initialize the webcam
 cap = cv2.VideoCapture(0)
 ret = True
+
+WIDTH = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+HEIGHT = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
 while ret:
     # Read each frame from the webcam
     ret, frame = cap.read()
@@ -83,8 +87,8 @@ while ret:
                 # # print(id, lm)
                 # print(lm.x)
                 # print(lm.y)
-                lmx = int(lm.x * 640)
-                lmy = int(lm.y * 480)
+                lmx = int(lm.x * WIDTH)
+                lmy = int(lm.y * HEIGHT)
 
                 landmarks.append([lmx, lmy])
 
