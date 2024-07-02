@@ -4,6 +4,21 @@ import numpy as np
 import mediapipe as mp
 from collections import deque
 
+cubic_bezier = lambda P0, P1, P2, P3, t: (1-t)**3 * P0 + 3*(1-t)**2 * t * P1 + 3*(1-t) * t**2 * P2 + t**3 * P3
+
+def smooth_bezier_curve(points, num_points=100):
+    
+    smoothed_points = []
+    n = len(points)
+    
+    for i in range(0, n-3, 3):
+        P0, P1, P2, P3 = points[i], points[i+1], points[i+2], points[i+3]
+        for t in np.linspace(0, 1, num_points):
+            smoothed_points.append(cubic_bezier(P0, P1, P2, P3, t))
+    
+    smoothed_points = np.round(smoothed_points).astype(int) 
+    
+    return np.array(smoothed_points)
 
 # Giving different arrays to handle colour points of different colour
 bpoints = [deque(maxlen=1024)]
@@ -160,11 +175,12 @@ while ret:
     #             cv2.line(paintWindow, points[0][j][k - 1], points[0][j][k], colors[0], 2)
     for i in range(len(points)):
         for j in range(len(points[i])):
-            for k in range(1, len(points[i][j])):
-                if points[i][j][k - 1] is None or points[i][j][k] is None:
-                    continue
-                cv2.line(frame, points[i][j][k - 1], points[i][j][k], colors[i], 2)
-                cv2.line(paintWindow, points[i][j][k - 1], points[i][j][k], colors[i], 2)
+            raw_points = np.array([pt for pt in points[i][j] if pt is not None])
+            smoothed_points = smooth_bezier_curve(raw_points, num_points=100)
+            # Draw the smoothed lines
+            for k in range(1, len(smoothed_points)):
+                cv2.line(frame, tuple(smoothed_points[k - 1]), tuple(smoothed_points[k]), colors[i], 2)
+                cv2.line(paintWindow, tuple(smoothed_points[k - 1]), tuple(smoothed_points[k]), colors[i], 2)
 
     cv2.imshow("Output", frame) 
     cv2.imshow("Paint", paintWindow)
